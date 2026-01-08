@@ -1,0 +1,5 @@
+{
+  "name": "Planning de Séances",
+  "description": "Une application web pour créer, gérer et imprimer un planning de séances de cours. L'utilisateur peut ajouter, supprimer et modifier des séances, ajuster les dates, heures et durées, et générer une vue d'impression professionnelle incluant un QR code.",
+  "requestFramePermissions": []
+}

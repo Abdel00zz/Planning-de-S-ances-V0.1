@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 Sync ToolBox - Planning des Séances</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .status {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .class-name {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .session-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .log {
+            background: #1f2937;
+            color: #10b981;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .log-error {
+            color: #ef4444;
+        }
+
+        .log-success {
+            color: #10b981;
+        }
+
+        .log-info {
+            color: #3b82f6;
+        }
+
+        .log-warning {
+            color: #f59e0b;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .syncing {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Synchronisation ToolBox</h1>
+        <p class="subtitle">Synchronise les plannings depuis localStorage vers ToolBox CLI</p>
+
+        <div class="status" id="status">
+            <p style="color: #6b7280; text-align: center;">Chargement des plannings...</p>
+        </div>
+
+        <div class="log" id="log"></div>
+
+        <button class="btn" onclick="syncToToolBox()">
+            🚀 Synchroniser avec ToolBox
+        </button>
+
+        <button class="btn btn-secondary" onclick="location.href='index.html'">
+            ← Retour au Planning
+        </button>
+    </div>
+
+    <script>
+        const CLASS_LEVELS = [
+            'Tronc Commun Scientifique',
+            '1ère Bac Sciences Expérimentales',
+            '1ère Bac Sciences Mathématiques',
+            '2ème Bac Sciences Expérimentales',
+            '2ème Bac Sciences Mathématiques'
+        ];
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            const className = `log-${type}`;
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function getStorageKey(className) {
+            return `planning_sessions_${className.replace(/\s+/g, '_')}`;
+        }
+
+        function loadAllPlannings() {
+            const plannings = [];
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '';
+
+            CLASS_LEVELS.forEach(className => {
+                const storageKey = getStorageKey(className);
+                const savedSessions = localStorage.getItem(storageKey);
+
+                let sessionCount = 0;
+                if (savedSessions && savedSessions !== 'null' && savedSessions !== '[]') {
+                    try {
+                        const sessions = JSON.parse(savedSessions);
+                        sessionCount = sessions.length;
+                        plannings.push({
+                            className: className,
+                            sessions: sessions,
+                            count: sessionCount
+                        });
+                    } catch (e) {
+                        console.error(`Erreur parsing ${className}:`, e);
+                    }
+                }
+
+                // Afficher dans le status
+                const item = document.createElement('div');
+                item.className = 'status-item';
+                item.innerHTML = `
+                    <span class="class-name">${className}</span>
+                    <span class="session-count">${sessionCount} séance(s)</span>
+                `;
+                statusDiv.appendChild(item);
+            });
+
+            return plannings;
+        }
+
+        async function syncToToolBox() {
+            const btn = event.target;
+            btn.classList.add('syncing');
+            btn.disabled = true;
+            btn.textContent = '⏳ Synchronisation en cours...';
+
+            log('🔄 Démarrage de la synchronisation...', 'info');
+
+            const plannings = loadAllPlannings();
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const planning of plannings) {
+                if (planning.count === 0) {
+                    log(`⊘ ${planning.className}: Aucune séance à synchroniser`, 'warning');
+                    continue;
+                }
+
+                try {
+                    log(`📤 Envoi: ${planning.className} (${planning.count} séances)...`, 'info');
+
+                    const response = await fetch('http://127.0.0.1:5555/api/sync', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            className: planning.className,
+                            sessions: planning.sessions,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    if (response.ok) {
+                        log(`✓ ${planning.className}: ${planning.count} séances synchronisées`, 'success');
+                        successCount++;
+                    } else {
+                        log(`✗ ${planning.className}: Erreur HTTP ${response.status}`, 'error');
+                        errorCount++;
+                    }
+
+                    // Petit délai entre chaque envoi
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                } catch (error) {
+                    log(`✗ ${planning.className}: ${error.message}`, 'error');
+                    errorCount++;
+                }
+            }
+
+            // Résumé final
+            log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            log(`📊 Résumé: ${successCount} succès, ${errorCount} erreurs`, successCount > 0 ? 'success' : 'error');
+            
+            if (successCount > 0) {
+                log(`🎉 Synchronisation terminée avec succès!`, 'success');
+                log(`💡 Le ToolBox CLI affichera maintenant les nouvelles séances`, 'info');
+            } else {
+                log(`⚠️ Aucune classe n'a été synchronisée`, 'warning');
+                log(`💡 Vérifiez que le ToolBox CLI est démarré (port 5555)`, 'warning');
+            }
+
+            btn.classList.remove('syncing');
+            btn.disabled = false;
+            btn.textContent = '✓ Synchronisation terminée';
+
+            setTimeout(() => {
+                btn.textContent = '🚀 Synchroniser avec ToolBox';
+            }, 3000);
+        }
+
+        // Charger les plannings au démarrage
+        window.addEventListener('DOMContentLoaded', () => {
+            log('📂 Chargement des plannings depuis localStorage...', 'info');
+            const plannings = loadAllPlannings();
+            const totalSessions = plannings.reduce((sum, p) => sum + p.count, 0);
+            log(`✓ ${plannings.length} classes trouvées, ${totalSessions} séances au total`, 'success');
+            log(`💡 Cliquez sur "Synchroniser" pour envoyer vers ToolBox CLI`, 'info');
+        });
+    </script>
+</body>
+</html>
