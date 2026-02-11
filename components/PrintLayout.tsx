@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import type { Session } from '../types';
 import { formatDuration } from '../utils/time';
@@ -12,14 +11,13 @@ interface PrintLayoutProps {
 }
 
 const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selectedClass }) => {
-    
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', {
             month: 'long',
             day: 'numeric',
             year: 'numeric',
-            timeZone: 'UTC' 
+            timeZone: 'UTC'
         });
     };
 
@@ -34,91 +32,105 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
         if (totalSessions === 0) {
             return { totalSessions, totalWeeks: 0, totalHours: '0h' };
         }
-        
+
         const dates = sessions.map(s => new Date(s.date)).sort((a, b) => a.getTime() - b.getTime());
         const firstDate = dates[0];
         const lastDate = dates[dates.length - 1];
-        
+
         const dayDifference = (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24);
         const totalWeeks = Math.ceil((dayDifference + 1) / 7) || 1;
-        
+
         const totalMinutes = sessions.reduce((sum, s) => sum + s.durationMinutes, 0);
         const totalHours = formatDuration(totalMinutes);
-        
+
         return { totalSessions, totalWeeks, totalHours };
     }, [sessions]);
 
     const weeklySessions: WeekGroup[] = useMemo(() => groupSessionsByWeek(sessions).reverse(), [sessions]);
+    const generatedOn = useMemo(
+        () => new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }),
+        []
+    );
 
     return (
-        <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-10 font-sans" style={{ width: '1240px' }}>
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl shadow-2xl p-12 w-full min-h-[1754px] flex flex-col">
-                
-                <header className="flex items-start justify-between mb-10">
-                    <div className="flex items-center gap-6">
-                        <img src="/logo.png" alt="Math+" className="w-28 h-28" />
+        <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-8" style={{ width: '1240px', fontFamily: 'Fira Sans, sans-serif' }}>
+            <div className="bg-[#f8fafc] text-slate-900 rounded-3xl border border-[#dce4ef] p-10 w-full min-h-[1754px] flex flex-col shadow-[0_24px_55px_-30px_rgba(59,130,246,0.35)]">
+                <header className="mb-8 rounded-2xl border border-[#dce4ef] bg-gradient-to-r from-[#f1f5f9] via-[#eef2ff] to-[#f8fafc] p-8">
+                    <div className="flex items-start justify-between gap-6">
                         <div>
-                            <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-orange-400 to-amber-300 text-transparent bg-clip-text">
-                                {selectedClass}
-                            </h1>
-                            <p className="text-xl text-slate-300 font-light tracking-wide">{academicYear}</p>
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold">Planning des séances</p>
+                            <h1 className="font-print-heading text-[2.15rem] leading-tight font-bold tracking-tight text-slate-900 mt-1">{selectedClass}</h1>
+                            <p className="text-base text-slate-600 mt-1">{academicYear}</p>
+                        </div>
+                        <div className="flex-shrink-0 text-right rounded-xl bg-white border border-[#dce4ef] px-4 py-3">
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">Généré le</div>
+                            <div className="text-sm font-semibold text-slate-700 mt-1">{generatedOn}</div>
                         </div>
                     </div>
-                     <div className="text-right flex-shrink-0">
-                        <div className="text-4xl font-bold">{summaryData.totalSessions}</div>
-                        <div className="text-sm uppercase tracking-widest text-slate-400">Séances</div>
+
+                    <div className="grid grid-cols-3 gap-4 mt-6">
+                        <div className="rounded-xl border border-[#dce4ef] bg-white p-4 text-center">
+                            <div className="text-3xl font-bold text-slate-900">{summaryData.totalSessions}</div>
+                            <div className="text-xs uppercase tracking-wider text-slate-500 mt-1">Séances</div>
+                        </div>
+                        <div className="rounded-xl border border-[#dce4ef] bg-white p-4 text-center">
+                            <div className="text-3xl font-bold text-slate-900">{summaryData.totalWeeks}</div>
+                            <div className="text-xs uppercase tracking-wider text-slate-500 mt-1">Semaines</div>
+                        </div>
+                        <div className="rounded-xl border border-[#dce4ef] bg-white p-4 text-center">
+                            <div className="text-3xl font-bold text-slate-900">{summaryData.totalHours}</div>
+                            <div className="text-xs uppercase tracking-wider text-slate-500 mt-1">Volume horaire</div>
+                        </div>
                     </div>
                 </header>
 
-                <main className="flex-1 space-y-8">
+                <main className="flex-1 space-y-6">
                     {weeklySessions.map((week) => (
-                        <div key={week.label}>
-                            <h2 className="text-sm font-bold uppercase tracking-widest text-orange-400 mb-4 border-b-2 border-slate-700 pb-2">
+                        <section key={week.label} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
+                            <h2 className="font-print-heading text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb] mb-5">
                                 {week.label}
                             </h2>
-                            <div className="grid grid-cols-3 gap-6">
-                                {week.sessions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((session) => (
-                                    <div key={session.id} className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 shadow-lg">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-sm font-bold text-slate-300">{formatDate(session.date)}</span>
-                                            <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{getDayOfWeek(session.date)}</span>
-                                        </div>
-                                        <div className="text-center bg-slate-900 rounded-md py-3">
-                                            <div className="text-4xl font-mono font-bold text-amber-300 tracking-wider">{session.time.replace('h', ':')}</div>
-                                            <div className="text-sm text-slate-400 font-semibold">{formatDuration(session.durationMinutes)}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="grid grid-cols-2 gap-5">
+                                {week.sessions
+                                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                    .map((session) => (
+                                        <article
+                                            key={session.id}
+                                            className="rounded-2xl border border-[#dce4ef] bg-gradient-to-b from-white to-[#f8fafc] p-5 min-h-[190px]"
+                                        >
+                                            <div className="flex justify-between items-start gap-3 mb-5">
+                                                <div>
+                                                    <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">{getDayOfWeek(session.date)}</p>
+                                                    <p className="text-base font-semibold text-slate-800 mt-1">{formatDate(session.date)}</p>
+                                                </div>
+                                                <span className="text-xs font-semibold text-[#1d4ed8] bg-[#dbeafe] px-3 py-1 rounded-full border border-[#bfdbfe]">
+                                                    Séance
+                                                </span>
+                                            </div>
+                                            <div className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white px-5 py-4 text-center">
+                                                <div className="text-4xl font-mono font-bold tracking-wide">{session.time.replace('h', ':')}</div>
+                                                <div className="text-sm text-slate-300 uppercase tracking-[0.12em] mt-1">{formatDuration(session.durationMinutes)}</div>
+                                            </div>
+                                        </article>
+                                    ))}
                             </div>
-                        </div>
+                        </section>
                     ))}
                     {sessions.length === 0 && (
-                        <div className="text-center py-20 border-2 border-dashed border-slate-700 rounded-lg">
-                            <p className="text-slate-400">Aucune séance planifiée.</p>
+                        <div className="text-center py-20 border-2 border-dashed border-[#cbd5e1] rounded-2xl bg-white">
+                            <p className="text-slate-500">Aucune séance planifiée.</p>
                         </div>
                     )}
                 </main>
 
-                <footer className="mt-auto pt-8 border-t-2 border-slate-700 flex items-end justify-between">
-                    <div className="flex gap-10 text-center">
-                        <div>
-                            <div className="text-4xl font-bold">{summaryData.totalWeeks}</div>
-                            <div className="text-xs uppercase font-bold text-slate-400 mt-1 tracking-wider">Semaines</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold">{summaryData.totalHours}</div>
-                            <div className="text-xs uppercase font-bold text-slate-400 mt-1 tracking-wider">Total Heures</div>
-                        </div>
+                <footer className="mt-8 pt-6 border-t border-[#dce4ef] flex items-end justify-between">
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Accès plateforme</p>
+                        <p className="text-sm text-slate-700 mt-1">mathplus-platform.com</p>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
-                        <div className="text-right">
-                             <div className="text-sm font-bold uppercase text-slate-300 tracking-widest">Accès Plateforme</div>
-                             <div className="text-xs text-slate-400">mathplus-platform.com</div>
-                        </div>
-                        <div className="w-28 h-28 border-4 border-slate-700 p-1 bg-white rounded-lg">
-                             <PlatformAccess isPrint={true} />
-                        </div>
+
+                    <div className="w-24 h-24 border border-[#dce4ef] p-1.5 bg-white rounded-xl shadow-sm">
+                        <PlatformAccess isPrint={true} />
                     </div>
                 </footer>
             </div>
