@@ -52,11 +52,6 @@ const App: React.FC = () => {
     };
 
     const academicYear = useMemo(getAcademicYear, []);
-    
-    // 🔥 Pas de sessions par défaut - commence vide
-    const createDefaultSessions = useCallback((): {sessions: Session[]} => {
-        return { sessions: [] };
-    }, []);
 
     // 🔥 Fonction intelligente pour ajouter un toast (avec priorité et contexte)
     const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
@@ -291,7 +286,7 @@ const App: React.FC = () => {
             }
 
             // Sauvegarder localement via l'utilitaire (pour la persistance "officielle")
-            const savedPlanning = savePlanning(selectedClass, sessions);
+            savePlanning(selectedClass, sessions);
             
             // Grouper par semaines pour le feedback
             const weekGroups = groupSessionsByWeek(sessions);
