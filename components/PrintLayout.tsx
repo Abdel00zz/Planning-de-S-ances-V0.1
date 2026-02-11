@@ -48,6 +48,13 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
 
     const weeklySessions: WeekGroup[] = useMemo(() => groupSessionsByWeek(sessions).reverse(), [sessions]);
 
+    const getPrintPeriodLabel = (week: WeekGroup) => {
+        if (week.isCurrent) {
+            return `Période ${week.weekNumber} • ${week.year} • En cours`;
+        }
+        return `Période ${week.weekNumber} • ${week.year}`;
+    };
+
     return (
         <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-8" style={{ width: '1240px', fontFamily: 'Fira Sans, sans-serif' }}>
             <div className="bg-[#f8fafc] text-slate-900 rounded-3xl border border-[#dce4ef] p-10 w-full min-h-[1754px] flex flex-col shadow-[0_24px_55px_-30px_rgba(59,130,246,0.35)]">
@@ -78,9 +85,9 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
 
                 <main className="flex-1 space-y-6">
                     {weeklySessions.map((week) => (
-                        <section key={week.label} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
+                        <section key={getPrintPeriodLabel(week)} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
                             <h2 className="font-print-heading text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb] mb-5">
-                                {week.label}
+                                {getPrintPeriodLabel(week)}
                             </h2>
                             <div className="grid grid-cols-2 gap-5">
                                 {week.sessions
