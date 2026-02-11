@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import type { Session } from '../types';
 import { formatDuration } from '../utils/time';
 import PlatformAccess from './PlatformAccess';
-import { groupSessionsByWeek, WeekGroup } from '../utils/planningStorage';
 
 interface PrintLayoutProps {
     sessions: Session[];
@@ -45,13 +44,15 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
 
         return { totalSessions, totalWeeks, totalHours };
     }, [sessions]);
-
-    const weeklySessions: WeekGroup[] = useMemo(() => groupSessionsByWeek(sessions).reverse(), [sessions]);
+    
+    const sortedSessions = useMemo(() => {
+        return [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [sessions]);
 
 
     return (
         <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-8" style={{ width: '1240px', fontFamily: 'Fira Sans, sans-serif' }}>
-            <div className="bg-[#f8fafc] text-slate-900 rounded-3xl border border-[#dce4ef] p-10 w-full min-h-[1754px] flex flex-col shadow-[0_24px_55px_-30px_rgba(59,130,246,0.35)]">
+            <div className="bg-white text-slate-900 rounded-3xl border border-[#dce4ef] p-10 w-full min-h-[1754px] flex flex-col shadow-[0_24px_55px_-30px_rgba(59,130,246,0.35)]">
                 <header className="mb-8 rounded-2xl border border-[#dce4ef] bg-gradient-to-r from-[#f1f5f9] via-[#eef2ff] to-[#f8fafc] p-8">
                     <div className="flex items-start gap-6">
                         <div>
@@ -77,36 +78,30 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
                     </div>
                 </header>
 
-                <main className="flex-1 space-y-6">
-                    {weeklySessions.map((week) => (
-                        <section key={week.label} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
-                            <div className="grid grid-cols-2 gap-5">
-                                {week.sessions
-                                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                                    .map((session) => (
-                                        <article
-                                            key={session.id}
-                                            className="rounded-2xl border border-[#dce4ef] bg-gradient-to-b from-white to-[#f8fafc] p-5 min-h-[190px]"
-                                        >
-                                            <div className="flex justify-between items-start gap-3 mb-5">
-                                                <div>
-                                                    <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">{getDayOfWeek(session.date)}</p>
-                                                    <p className="text-base font-semibold text-slate-800 mt-1">{formatDate(session.date)}</p>
-                                                </div>
-                                                <span className="text-xs font-semibold text-[#1d4ed8] bg-[#dbeafe] px-3 py-1 rounded-full border border-[#bfdbfe]">
-                                                    Séance
-                                                </span>
+                <main className="flex-1">
+                    {sessions.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-5">
+                            {sortedSessions.map((session) => (
+                                <article
+                                    key={session.id}
+                                    className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden"
+                                >
+                                    <div className="p-5">
+                                        <div className="flex justify-between items-start gap-3 mb-4">
+                                            <div>
+                                                <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">{getDayOfWeek(session.date)}</p>
+                                                <p className="text-base font-semibold text-slate-800 mt-1">{formatDate(session.date)}</p>
                                             </div>
-                                            <div className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white px-5 py-4 text-center">
-                                                <div className="text-4xl font-mono font-bold tracking-wide">{session.time.replace('h', ':')}</div>
-                                                <div className="text-sm text-slate-300 uppercase tracking-[0.12em] mt-1">{formatDuration(session.durationMinutes)}</div>
-                                            </div>
-                                        </article>
-                                    ))}
-                            </div>
-                        </section>
-                    ))}
-                    {sessions.length === 0 && (
+                                        </div>
+                                        <div className="rounded-lg bg-gradient-to-br from-sky-100 to-blue-200 px-5 py-4 text-center">
+                                            <div className="text-4xl font-mono font-bold tracking-wide text-slate-900">{session.time.replace('h', ':')}</div>
+                                            <div className="text-sm text-blue-800 uppercase tracking-[0.12em] mt-1">{formatDuration(session.durationMinutes)}</div>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    ) : (
                         <div className="text-center py-20 border-2 border-dashed border-[#cbd5e1] rounded-2xl bg-white">
                             <p className="text-slate-500">Aucune séance planifiée.</p>
                         </div>

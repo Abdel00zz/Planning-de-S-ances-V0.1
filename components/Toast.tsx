@@ -13,76 +13,93 @@ const Toast: React.FC<ToastProps> = ({ message, type, title, className, duration
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Apparition avec délai
-    setTimeout(() => setIsVisible(true), 10);
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
     
-    // Disparition automatique
-    const timer = setTimeout(() => {
+    const hideTimer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Attendre la fin de l'animation
+      const closeTimer = setTimeout(onClose, 300); // Attendre la fin de l'animation
+      return () => clearTimeout(closeTimer);
     }, duration);
     
-    return () => clearTimeout(timer);
+    return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+    };
   }, [duration, onClose]);
 
-  const icons = {
-    success: '✓',
-    error: '✗',
-    warning: '⚠',
-    info: 'ℹ'
+  const styleConfig = {
+    success: {
+      icon: '✓',
+      borderColor: 'border-emerald-500',
+      iconColor: 'text-emerald-500',
+      progressBg: 'bg-emerald-500',
+    },
+    error: {
+      icon: '✗',
+      borderColor: 'border-rose-500',
+      iconColor: 'text-rose-500',
+      progressBg: 'bg-rose-500',
+    },
+    warning: {
+      icon: '⚠',
+      borderColor: 'border-amber-500',
+      iconColor: 'text-amber-500',
+      progressBg: 'bg-amber-500',
+    },
+    info: {
+      icon: 'ℹ',
+      borderColor: 'border-cyan-500',
+      iconColor: 'text-cyan-500',
+      progressBg: 'bg-cyan-500',
+    },
   };
 
-  const styles = {
-    success: 'bg-gradient-to-r from-emerald-500/95 to-emerald-600/95 border-emerald-400/50',
-    error: 'bg-gradient-to-r from-rose-500/95 to-rose-600/95 border-rose-400/50',
-    warning: 'bg-gradient-to-r from-amber-500/95 to-amber-600/95 border-amber-400/50',
-    info: 'bg-gradient-to-r from-cyan-500/95 to-cyan-600/95 border-cyan-400/50'
-  };
+  const { icon, borderColor, iconColor, progressBg } = styleConfig[type];
 
   return (
-    <div 
+    <div
       className={`
-        ${styles[type]}
-        backdrop-blur-xl
-        text-white px-4 py-3 rounded-xl
-        shadow-2xl shadow-black/30
-        border-2 border-opacity-40
-        flex items-start gap-3
+        bg-white text-slate-800
+        rounded-lg shadow-lg
+        flex items-start
+        border-l-4 ${borderColor}
         transition-all duration-300 ease-out
-        ${isVisible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}
-        min-w-[300px] max-w-[420px]
+        ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
+        min-w-[320px] max-w-[420px]
+        relative overflow-hidden
       `}
     >
-      <div className="flex items-start gap-3 flex-1">
-        <span className="text-2xl flex-shrink-0 mt-0.5">{icons[type]}</span>
+      <div className="flex items-start gap-3 p-4 w-full">
+        <span className={`text-2xl flex-shrink-0 mt-0.5 ${iconColor}`}>{icon}</span>
         <div className="flex-1 min-w-0">
-          {title && (
-            <div className="font-bold text-sm mb-1 leading-tight">
-              {title}
-            </div>
-          )}
-          <div className="text-sm leading-snug opacity-95">
-            {message}
-          </div>
+          {title && <div className="font-bold text-sm mb-1 leading-tight">{title}</div>}
+          <div className="text-sm leading-snug text-slate-600">{message}</div>
           {className && !title?.includes(className) && (
-            <div className="text-xs mt-1.5 opacity-75 font-medium">
+            <div className="text-xs mt-1.5 text-slate-500 font-medium">
               📚 {className}
             </div>
           )}
         </div>
+        <button
+          onClick={() => {
+            setIsVisible(false);
+            setTimeout(onClose, 300);
+          }}
+          className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors text-xl leading-none mt-0.5"
+        >
+          ×
+        </button>
       </div>
-      <button 
-        onClick={() => {
-          setIsVisible(false);
-          setTimeout(onClose, 300);
-        }}
-        className="flex-shrink-0 text-white/60 hover:text-white transition-colors text-xl leading-none mt-0.5"
-      >
-        ×
-      </button>
+      <div className="absolute bottom-0 left-0 h-1 w-full bg-slate-100">
+        <div
+          className={`h-full ${progressBg}`}
+          style={{ animation: `shrink ${duration}ms linear` }}
+        />
+      </div>
     </div>
   );
 };
+
 
 interface ToastContainerProps {
   toasts: Array<{ 
