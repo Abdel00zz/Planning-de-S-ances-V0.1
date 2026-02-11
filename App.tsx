@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Session } from './types';
 import Header from './components/Header';
@@ -9,6 +10,7 @@ import DurationPopup from './components/DurationPopup';
 import PrintLayout from './components/PrintLayout';
 import { ToastContainer } from './components/Toast';
 import { savePlanning, detectClassOverlaps, groupSessionsByWeek } from './utils/planningStorage';
+import html2canvas from 'html2canvas';
 
 interface ToastMessage {
     id: string;
@@ -38,6 +40,7 @@ const App: React.FC = () => {
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const [toastQueue, setToastQueue] = useState<Omit<ToastMessage, 'id'>[]>([]);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     const getAcademicYear = () => {
         const today = new Date();
@@ -205,8 +208,47 @@ const App: React.FC = () => {
         ));
     };
     
-    const handlePrint = () => {
-        window.print();
+    const handleExportPNG = async () => {
+        const printElement = document.getElementById('print-layout-container');
+        if (!printElement) {
+            addToast({
+                type: 'error',
+                title: 'Erreur Exportation',
+                message: 'Impossible de trouver l\'élément à exporter.',
+                priority: 'high'
+            });
+            return;
+        }
+
+        setIsExporting(true);
+        addToast({ type: 'info', title: 'Exportation en cours...', message: 'Génération de l\'image PNG.', duration: 2500 });
+
+        try {
+            const canvas = await html2canvas(printElement, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: null,
+                windowWidth: printElement.scrollWidth,
+                windowHeight: printElement.scrollHeight,
+            });
+
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            const safeClassName = selectedClass.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.download = `planning_${safeClassName}_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            addToast({ type: 'success', title: 'Exportation réussie', message: 'Votre planning a été téléchargé.', priority: 'normal' });
+
+        } catch (error) {
+            console.error('Erreur durant l\'exportation PNG:', error);
+            addToast({ type: 'error', title: 'Échec de l\'exportation', message: 'Une erreur est survenue.', priority: 'high' });
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     // 🔥 Nouvelle fonction: Enregistrer localement et valider
@@ -297,11 +339,12 @@ const App: React.FC = () => {
                     <Header academicYear={academicYear} />
                     <Controls
                         onAddSession={handleAddSession}
-                        onPrint={handlePrint}
+                        onExportPNG={handleExportPNG}
                         onSavePlanning={handleSavePlanning}
                         classLevels={CLASS_LEVELS}
                         selectedClass={selectedClass}
                         onClassChange={handleClassChange}
+                        isExporting={isExporting}
                     />
                 </div>
 
