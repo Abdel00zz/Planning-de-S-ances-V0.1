@@ -48,12 +48,6 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
 
     const weeklySessions: WeekGroup[] = useMemo(() => groupSessionsByWeek(sessions).reverse(), [sessions]);
 
-    const getPrintPeriodLabel = (week: WeekGroup) => {
-        if (week.isCurrent) {
-            return `Période ${week.weekNumber} • ${week.year} • En cours`;
-        }
-        return `Période ${week.weekNumber} • ${week.year}`;
-    };
 
     return (
         <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-8" style={{ width: '1240px', fontFamily: 'Fira Sans, sans-serif' }}>
@@ -85,10 +79,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
 
                 <main className="flex-1 space-y-6">
                     {weeklySessions.map((week) => (
-                        <section key={getPrintPeriodLabel(week)} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
-                            <h2 className="font-print-heading text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb] mb-5">
-                                {getPrintPeriodLabel(week)}
-                            </h2>
+                        <section key={week.label} className="rounded-2xl border border-[#dce4ef] bg-white p-6 shadow-[0_10px_25px_-20px_rgba(59,130,246,0.45)]">
                             <div className="grid grid-cols-2 gap-5">
                                 {week.sessions
                                     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -125,7 +116,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
                 <footer className="mt-8 pt-6 border-t border-[#dce4ef] flex items-end justify-between">
                     <div>
                         <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Accès plateforme</p>
-                        <p className="text-sm text-slate-700 mt-1">mathplus-platform.com</p>
+                        <p className="text-sm text-slate-700 mt-1">https://mathplus-coral.vercel.app</p>
                     </div>
 
                     <div className="w-24 h-24 border border-[#dce4ef] p-1.5 bg-white rounded-xl shadow-sm">
