@@ -47,24 +47,16 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ sessions, academicYear, selec
     }, [sessions]);
 
     const weeklySessions: WeekGroup[] = useMemo(() => groupSessionsByWeek(sessions).reverse(), [sessions]);
-    const generatedOn = useMemo(
-        () => new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }),
-        []
-    );
 
     return (
         <div id="print-layout-container" className="absolute top-0 -left-[9999px] z-0 p-8" style={{ width: '1240px', fontFamily: 'Fira Sans, sans-serif' }}>
             <div className="bg-[#f8fafc] text-slate-900 rounded-3xl border border-[#dce4ef] p-10 w-full min-h-[1754px] flex flex-col shadow-[0_24px_55px_-30px_rgba(59,130,246,0.35)]">
                 <header className="mb-8 rounded-2xl border border-[#dce4ef] bg-gradient-to-r from-[#f1f5f9] via-[#eef2ff] to-[#f8fafc] p-8">
-                    <div className="flex items-start justify-between gap-6">
+                    <div className="flex items-start gap-6">
                         <div>
                             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold">Planning des séances</p>
                             <h1 className="font-print-heading text-[2.15rem] leading-tight font-bold tracking-tight text-slate-900 mt-1">{selectedClass}</h1>
                             <p className="text-base text-slate-600 mt-1">{academicYear}</p>
-                        </div>
-                        <div className="flex-shrink-0 text-right rounded-xl bg-white border border-[#dce4ef] px-4 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">Généré le</div>
-                            <div className="text-sm font-semibold text-slate-700 mt-1">{generatedOn}</div>
                         </div>
                     </div>
 
